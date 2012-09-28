@@ -6,27 +6,38 @@ import javax.servlet.annotation.*;
 import javax.servlet.http.*;
 
 @WebServlet( urlPatterns = { "/thinkfast" },
-             asyncSupported = true )
+             asyncSupported = true, loadOnStartup=1 )
 public class ThinkFastController extends HttpServlet {
+    
+    private ThinkFastGame game;
 
+    @Override
+    public void init( ServletConfig config ) throws ServletException {
+        super.init( config );
+        this.game = new ThinkFastGame();
+        game.init();
+    }
+    
     @Override
     protected void doGet( HttpServletRequest req,
                           HttpServletResponse resp )
-            throws ServletException, IOException {
-        super.doGet( req, resp );
-    }
-    
-    public class Question {
-        private String description;
-        private java.util.List<String> answers;
-        private String correctAnswer;
+            throws ServletException, IOException {      
         
-        public Question( String description,
-                         java.util.List<String> answers,
-                         String correctAnswer ) {
-            this.description = description;
-            this.answers = answers;
-            this.correctAnswer = correctAnswer;
-        }
+        String action = req.getParameter( "action" );
+        String id = req.getSession(true).getId();
+        
+        if( "play".equals( action ) ) {
+            String name = req.getParameter( "name" );
+            AsyncContext ctx = req.startAsync();
+            game.play( id, name, ctx);
+        } else if( "answer".equals( action ) ) {
+            String answer = req.getParameter( "answer" );
+            game.answer( id, answer );
+        } else if( "bind".equals( action ) ) {
+            AsyncContext ctx = req.startAsync();
+            game.bind( id, ctx ); 
+        } 
+        
+        
     }
 }

@@ -1,5 +1,6 @@
 package br.com.senac.ccs.thinkfast;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
 public class Question {
@@ -24,4 +25,10 @@ public class Question {
     public List<String> getAnswers() {
         return answers;
     }
+    
+    @JsonIgnore
+    public String getAnswer() {
+        return answer;
+    }
+
 }
