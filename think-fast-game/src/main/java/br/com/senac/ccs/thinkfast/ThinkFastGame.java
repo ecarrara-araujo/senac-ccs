@@ -1,16 +1,16 @@
 package br.com.senac.ccs.thinkfast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.servlet.AsyncContext;
+import javax.annotation.PostConstruct;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ThinkFastGame {
     
     private final ConcurrentHashMap<String, Participant> participants;
@@ -24,24 +24,27 @@ public class ThinkFastGame {
         this.lock = new ReentrantLock();
     }
     
-    public void play( String id, String name, AsyncContext asyncContext ) throws IOException {
+    public Result play( String id, String name, Screen screen ) {
         lock.lock();
+        Result result = null;
         try {
-            Participant participant = new Participant( id, name, asyncContext );
+            Participant participant = new Participant( id, name, screen );
             participants.put( id, participant );
-            participant.notify( new Result( this.currentQuestion, "Welcome :)" ) );
+            result = new Result( currentQuestion, "Welcome! :)");
         } finally {
             lock.unlock();
         }
+        return result;
     }
     
-    public void bind( String id, AsyncContext asyncContext ) {
+    public void bind( String id, Screen screen ) {
         Participant participant = participants.get( id );
-        participant.setAsyncContext( asyncContext );
+        participant.setScreen( screen );
     }
     
-    public void answer( String id, String answer ) throws IOException {
+    public Result answer( String id, String answer ) {
         lock.lock();
+        Result result = null;
         try {
             if ( currentQuestion.getAnswer().equals( answer ) ) {
                 Question question = currentQuestion;
@@ -58,14 +61,15 @@ public class ThinkFastGame {
                 }
                 participants.put( id, winner );
             } else {
-                Participant participant = participants.get( id );
-                participant.notify( new Result( "Nope!!! :(" ) );
+                result = new Result( "Nope!!! :(" );
             }
         } finally {
             lock.unlock();
         }
+        return result;
     }
     
+    @PostConstruct
     public void init() {
         this.questions.add( new Question( "Qual a capital dos EUA?", Arrays.asList( new String[]{ "Washington DC", "California", "Nevada" } ), "Washington DC" ) );
         this.questions.add( new Question( "Qual a capital da Russia?", Arrays.asList( new String[]{ "Berlin", "Paris", "Moscou" } ), "Moscou" ) );

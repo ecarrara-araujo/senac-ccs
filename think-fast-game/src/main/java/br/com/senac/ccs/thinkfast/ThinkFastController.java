@@ -1,43 +1,41 @@
 package br.com.senac.ccs.thinkfast;
 
-import java.io.IOException;
-import javax.servlet.*;
-import javax.servlet.annotation.*;
 import javax.servlet.http.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.request.async.DeferredResult;
 
-@WebServlet( urlPatterns = { "/thinkfast" },
-             asyncSupported = true, loadOnStartup=1 )
-public class ThinkFastController extends HttpServlet {
+@Controller
+@RequestMapping( value="/thinkfast/*", produces= { "application/json" } )
+public class ThinkFastController {
     
+    @Autowired
     private ThinkFastGame game;
 
-    @Override
-    public void init( ServletConfig config ) throws ServletException {
-        super.init( config );
-        this.game = new ThinkFastGame();
-        game.init();
+    @RequestMapping( value = "/play", method = RequestMethod.GET )    
+    public @ResponseBody Result play( Participant participant,
+                      HttpSession session ) {
+        String id = session.getId();
+        DeferredResult<Result> deferredResult = new DeferredResult<Result>();
+        Screen screen = new WebScreen( deferredResult );
+        return game.play( id, participant.getName(), screen );
     }
     
-    @Override
-    protected void doGet( HttpServletRequest req,
-                          HttpServletResponse resp )
-            throws ServletException, IOException {      
-        
-        String action = req.getParameter( "action" );
-        String id = req.getSession(true).getId();
-        
-        if( "play".equals( action ) ) {
-            String name = req.getParameter( "name" );
-            AsyncContext ctx = req.startAsync();
-            game.play( id, name, ctx);
-        } else if( "answer".equals( action ) ) {
-            String answer = req.getParameter( "answer" );
-            game.answer( id, answer );
-        } else if( "bind".equals( action ) ) {
-            AsyncContext ctx = req.startAsync();
-            game.bind( id, ctx ); 
-        } 
-        
-        
+    @RequestMapping( value = "/bind", method = RequestMethod.GET )
+    public @ResponseBody DeferredResult<Result> bind( HttpSession session ) {
+        DeferredResult<Result> deferredResult = new DeferredResult<Result>();
+        Screen screen = new WebScreen( deferredResult );
+        game.bind( session.getId(), screen );
+        return deferredResult;   
+    } 
+    
+    @RequestMapping( value = "/answer", method = RequestMethod.GET )
+    public @ResponseBody Result answer( @RequestParam String answer, 
+                        HttpSession session ) {
+        return game.answer( session.getId(), answer);
     }
 }

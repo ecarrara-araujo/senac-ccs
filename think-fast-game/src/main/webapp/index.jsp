@@ -34,14 +34,14 @@
                 self.message = ko.observable();
                 
                 self.play = function() {
-                    $.getJSON("/thinkfast", {action: "play", name: self.participant()}, function(data) {
+                    $.getJSON("/thinkfast/play", {name: self.participant()}, function(data) {
                         self.parseResult(data);
                         self.bind();
                     });
                 }
                 
                 self.bind = function() {
-                    $.getJSON("/thinkfast", {action: "bind"}, function(data) {
+                    $.getJSON("/thinkfast/bind", function(data) {
                         self.parseResult(data);
                     }).complete(function() {
                         self.bind();
@@ -49,7 +49,7 @@
                 }
                 
                 self.answer = function(answer) {
-                    $.getJSON("/thinkfast", {action: "answer", answer: answer }, function(data){
+                    $.getJSON("/thinkfast/answer", {answer: answer}, function(data){
                         self.parseResult(data);
                     });
                     return true;
