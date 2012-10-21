@@ -3,6 +3,7 @@ package br.com.senac.ccs.thinkfast;
 import javax.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,8 +34,9 @@ public class ThinkFastController {
         return deferredResult;   
     } 
     
-    @RequestMapping( value = "/answer", method = RequestMethod.GET )
-    public @ResponseBody Result answer( @RequestParam String answer, 
+    @RequestMapping( value = "/answer", method = RequestMethod.POST,
+                     consumes = { "application/json" })
+    public @ResponseBody Result answer( @RequestBody Answer answer, 
                         HttpSession session ) {
         return game.answer( session.getId(), answer);
     }
